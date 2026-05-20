@@ -1,0 +1,63 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   TÙY BIẾN FOOTER CHUẨN ĐẸP TRAI
+   ========================================================================== */
+
+/* 1. Cấu hình chung cho cả 2 chế độ */
+.footer {
+  padding: 1.5rem 0; /* Thu nhỏ khoảng cách trên dưới cho footer gọn gàng */
+}
+
+/* 2. Cấu hình riêng cho chế độ LIGHT MODE (Nền trắng) */
+.footer {
+  background-color: #ffffff;
+  /* Chỉnh border top mỏng lại (1px) và dùng màu xám siêu nhạt (#eef0f2) cho tinh tế */
+  border-top: 1px solid #eef0f2; 
+}
+.footer__copyright {
+  /* Chỉnh màu chữ Copyright sang màu xám đậm (#525f7f) để dễ đọc khi nền trắng */
+  color: #525f7f; 
+  font-size: 14px;
+}
+
+/* 3. Cấu hình riêng cho chế độ DARK MODE (Nền tối) */
+[data-theme='dark'] .footer {
+  background-color: #1c1c1c;
+  /* Chế độ tối thì dùng border màu xám mờ tối */
+  border-top: 1px solid #2e2e2e; 
+}
+[data-theme='dark'] .footer__copyright {
+  /* Chế độ tối thì cho chữ Copyright màu trắng mờ hoặc xám nhạt */
+  color: #b4b7bd; 
+}
+

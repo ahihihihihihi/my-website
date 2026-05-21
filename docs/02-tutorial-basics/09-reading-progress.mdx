@@ -1,0 +1,94 @@
+---
+title: 🏄‍♂️ Trải Nghiệm Người Dùng - Reading Progress
+sidebar_label: Reading Progress & Style
+sidebar_position: 9
+---
+
+import React, { useState, useEffect } from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+# 🏄‍♂️ Tối Ưu Trải Nghiệm "Ăn Chơi Nhảy Múa" Cho User
+
+Nhìn lên sát đỉnh màn hình của b đi! Một thanh tiến trình (Progress Bar) màu xanh sành điệu đang chạy mượt mà theo tốc độ cuộn chuột đọc bài của b đó. 
+
+export const ReadingProgressBar = () => {
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Tính toán tổng độ cao có thể cuộn của trang tài liệu
+      const totalHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (totalHeight > 0) {
+        const progress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(progress);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 'var(--ifm-navbar-height, 60px)', // Nằm ngay dưới thanh điều hướng của Docusaurus
+      left: 0,
+      width: `${scrollProgress}%`,
+      height: '4px',
+      background: 'linear-gradient(90deg, #2f6fe2, #00ced1, #2ecc71)', // Hiệu ứng dải màu gradient chuyển sắc mượt mà
+      zIndex: 1000,
+      transition: 'width 0.1s ease-out',
+      boxShadow: '0 1px 10px rgba(47, 111, 226, 0.5)'
+    }} />
+  );
+};
+
+{/* Gài luôn CSS để độ lại nút Copy mặc định và hiệu ứng Block Code cho chất chơi */}
+<style>{`
+  /* 1. Tạo hiệu ứng viền phát sáng lơ lửng cho các khối Code Block */
+  .theme-code-block {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    border: 1px solid transparent;
+  }
+  .theme-code-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(47, 111, 226, 0.15);
+    border-color: rgba(47, 111, 226, 0.3);
+  }
+
+  /* 2. Độ lại nút Copy Code mặc định nhìn cho công nghệ */
+  .copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock-CopyButton-styles-module {
+    background-color: rgba(47, 111, 226, 0.1) !important;
+    border: 1px solid rgba(47, 111, 226, 0.3) !important;
+    border-radius: 6px !important;
+    color: #2f6fe2 !important;
+    transition: all 0.2s ease !important;
+  }
+  .copyButton_node_modules-\@docusaurus-theme-classic-src-theme-CodeBlock-CopyButton-styles-module:hover {
+    background-color: #2f6fe2 !important;
+    color: #fff !important;
+    transform: scale(1.05);
+  }
+`}</style>
+
+<BrowserOnly>
+  {() => <ReadingProgressBar />}
+</BrowserOnly>
+
+---
+
+## 📝 Cuộn xuống dưới để Test thử độ mượt nào b hiền!
+
+Dưới đây là một đoạn text dài mô phỏng để b cuộn chuột tha hồ check var thanh tiến trình trên đỉnh nhé:
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+### 💡 Thử hover vào Block Code bên dưới xem nút Copy nó biến hình:
+
+```javascript
+// Thử rê chuột vào khối code này xem nó có nhấc nhẹ lên không nha b hiền!
+const checkVar = () => {
+  console.log("User đang phê pha với giao diện Docusaurus mới!");
+  return "Đỉnh cao ngộ đạo lụm tiền!";
+};

@@ -61,3 +61,26 @@
   color: #b4b7bd; 
 }
 
+/* src/css/custom.css */
+
+/* Hiệu ứng Code Block */
+.theme-code-block {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+.theme-code-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(47, 111, 226, 0.15);
+}
+
+/* Nút Copy */
+div[class*="codeBlockContainer"] button[class*="copyButton"] {
+  background-color: rgba(47, 111, 226, 0.1) !important;
+  border: 1px solid rgba(47, 111, 226, 0.3) !important;
+  border-radius: 6px !important;
+  color: #2f6fe2 !important;
+}
+div[class*="codeBlockContainer"] button[class*="copyButton"]:hover {
+  background-color: #2f6fe2 !important;
+  color: #fff !important;
+}

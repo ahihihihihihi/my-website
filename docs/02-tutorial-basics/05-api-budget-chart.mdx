@@ -1,0 +1,203 @@
+---
+title: 📈 Biểu Đồ Thu Chi - Live SVG Chart
+sidebar_label: Live SVG Chart
+---
+
+import React, { useState, useEffect } from 'react';
+
+# 📊 Biểu Đồ Tổng Quan Thu Chi Theo Tháng (SVG Real-time)
+
+Biểu đồ dưới đây được vẽ hoàn toàn bằng **Mã SVG cấu trúc** lồng trực tiếp trong React. Dữ liệu được tự động bóc tách, nhóm và cộng dồn số tiền theo từng tháng từ API GitHub Public Repo của b hiền.
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+export const BudgetSvgChart = () => {
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/ahihihihihihi/public/refs/heads/react-social-media-full-stack/15Q1yU59sfWI9oTeJHFkjkj6Br2C_xZW1rg1FuzXA7vQ_Data.json')
+      .then(response => response.json())
+      .then(jsonData => {
+        if (Array.isArray(jsonData)) {
+          // 1. Gom tất cả các mảng "rows" lại với nhau
+          const combinedRows = jsonData.reduce((acc, item) => {
+            if (item && Array.isArray(item.rows)) {
+              return acc.concat(item.rows);
+            }
+            return acc;
+          }, []);
+
+          // 2. Lọc bỏ các dòng trống hoặc dòng rác năm 1899
+          const validRows = combinedRows.filter(row => row && row[0] !== "" && !String(row[1]).includes("1899"));
+
+          // 3. Nhóm và cộng dồn số tiền theo Tháng (định dạng từ row[4] là "2026-03-01 00:00:00" -> "03/2026")
+          const monthlyMap = {};
+          validRows.forEach(row => {
+            const amount = row[2] ? Number(row[2]) : 0;
+            let monthLabel = 'Không rõ';
+            
+            if (row[4] && String(row[4]).includes('-')) {
+              const onlyDate = String(row[4]).split(' ')[0];
+              const parts = onlyDate.split('-');
+              if (parts.length >= 2) {
+                monthLabel = `${parts[1]}/${parts[0]}`; // Tạo label dạng "03/2026", "04/2026"
+              }
+            }
+
+            monthlyMap[monthLabel] = (monthlyMap[monthLabel] || 0) + amount;
+          });
+
+          // 4. Chuyển map dữ liệu thành mảng để vẽ biểu đồ
+          const formattedData = Object.keys(monthlyMap).map(month => ({
+            month,
+            total: monthlyMap[month]
+          })).sort((a, b) => a.month.localeCompare(b.month)); // Sắp xếp theo thứ tự thời gian hiển thị
+
+          setChartData(formattedData);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Lỗi húp API làm chart rồi b ơi:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '30px', color: 'var(--ifm-color-primary)', fontWeight: 'bold' }}>
+        🔄 Đang phân tích mảng tính toán biểu đồ SVG, đợi tí nhé b hiền...
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return <div style={{ padding: '20px', textAlign: 'center' }}>❌ Không có dữ liệu để hiển thị biểu đồ.</div>;
+  }
+
+  // Cấu hình tọa độ hình học cho khung SVG bản đồ đồ họa
+  const svgWidth = 600;
+  const svgHeight = 350;
+  const padding = 50;
+  const chartWidth = svgWidth - padding * 2;
+  const chartHeight = svgHeight - padding * 2;
+
+  // Tìm tháng có tổng chi tiêu lớn nhất để làm mốc đỉnh đồ thị (Tỷ lệ y)
+  const maxTotal = Math.max(...chartData.map(d => d.total), 100000); 
+
+  // Tính toán thông số cho các cột SVG
+  const barWidth = chartWidth / chartData.length - 20;
+
+  return (
+    <div style={{ margin: '20px 0', border: '1px solid var(--ifm-contents-border-color)', borderRadius: '12px', padding: '24px', backgroundColor: 'var(--ifm-background-surface-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+      
+      <h3 style={{ marginBottom: '20px', textAlign: 'center', color: '#2f6fe2' }}>
+        📊 Tổng Chi Tiêu Theo Từng Tháng (VND)
+      </h3>
+
+      {/* Vùng chứa SVG Responsive */}
+      <div style={{ width: '100%', overflowX: 'auto', textAlign: 'center' }}>
+        <svg 
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
+          width="100%" 
+          style={{ maxWidth: '600px', height: 'auto', overflow: 'visible' }}
+        >
+          {/* 1. Đường kẻ lưới ngang nền (Gridlines) & Trục Y số tiền */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+            const yPos = padding + chartHeight * (1 - ratio);
+            const valueLabel = Math.round(maxTotal * ratio);
+            return (
+              <g key={index}>
+                <line 
+                  x1={padding} 
+                  y1={yPos} 
+                  x2={svgWidth - padding} 
+                  y2={yPos} 
+                  stroke="var(--ifm-color-emphasis-300)" 
+                  strokeDasharray="4 4" 
+                  strokeWidth="1"
+                />
+                <text 
+                  x={padding - 10} 
+                  y={yPos + 4} 
+                  fill="var(--ifm-font-color-base)" 
+                  fontSize="10" 
+                  textAnchor="end"
+                >
+                  {valueLabel >= 1000000 ? `${(valueLabel / 1000000).toFixed(1)}M` : `${valueLabel.toLocaleString('vi-VN')}`}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* 2. Trục cơ sở X đáy biểu đồ */}
+          <line 
+            x1={padding} 
+            y1={svgHeight - padding} 
+            x2={svgWidth - padding} 
+            y2={svgHeight - padding} 
+            stroke="var(--ifm-font-color-base)" 
+            strokeWidth="1.5"
+          />
+
+          {/* 3. Vòng lặp vẽ các cột dữ liệu SVG đại diện cho từng tháng */}
+          {chartData.map((data, index) => {
+            // Tính toán vị trí x của cột
+            const xPos = padding + index * (chartWidth / chartData.length) + 10;
+            // Tính toán chiều cao cột dựa theo tỷ lệ giá trị tiền chi tiêu
+            const barHeight = (data.total / maxTotal) * chartHeight;
+            const yPos = svgHeight - padding - barHeight;
+
+            return (
+              <g key={data.month} style={{ cursor: 'pointer' }}>
+                {/* Thanh Cột (Rect) màu xanh Blue sáng bắt mắt */}
+                <rect
+                  x={xPos}
+                  y={yPos}
+                  width={barWidth}
+                  height={barHeight}
+                  fill="#2f6fe2"
+                  rx="4"
+                  style={{ transition: 'all 0.3s ease' }}
+                />
+                
+                {/* Nhãn hiển thị số tiền chính xác trên đỉnh đầu cột */}
+                <text
+                  x={xPos + barWidth / 2}
+                  y={yPos - 8}
+                  fill="#2f6fe2"
+                  fontSize="11"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  {Number(data.total).toLocaleString('vi-VN')} ₫
+                </text>
+
+                {/* Tên nhãn tháng nằm dưới trục X đáy */}
+                <text
+                  x={xPos + barWidth / 2}
+                  y={svgHeight - padding + 20}
+                  fill="var(--ifm-font-color-base)"
+                  fontSize="12"
+                  fontWeight="500"
+                  textAnchor="middle"
+                >
+                  Tháng {data.month}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div style={{ marginTop: '20px', fontSize: '13px', color: 'var(--ifm-color-emphasis-600)', textAlign: 'center', fontStyle: 'italic' }}>
+        💡 Mẹo: Biểu đồ tính toán tự động dựa trên tổng số tiền thô cộng dồn thực tế từ file data.
+      </div>
+    </div>
+  );
+};
+
+<BrowserOnly>
+  {() => <BudgetSvgChart />}
+</BrowserOnly>

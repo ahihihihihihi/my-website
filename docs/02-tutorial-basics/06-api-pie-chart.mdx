@@ -1,0 +1,194 @@
+---
+title: 🍕 Biểu Đồ Tròn - Live SVG Pie Chart
+sidebar_label: Live SVG Pie Chart
+---
+
+import React, { useState, useEffect } from 'react';
+
+# 🍕 Biểu Đồ Tròn Phân Phối Chi Tiêu (SVG Lượng Giác)
+
+Biểu đồ tròn dưới đây được tính toán tọa độ hình học tự động bằng thuật toán lượng giác lồng trong React, vẽ trực tiếp bằng thẻ `<path />` của SVG. Dữ liệu tự động gom cụm theo các hạng mục Ghi chú xuất hiện nhiều nhất từ API của b hiền.
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+export const BudgetPieChart = () => {
+  const [pieData, setPieData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/ahihihihihihi/public/refs/heads/react-social-media-full-stack/15Q1yU59sfWI9oTeJHFkjkj6Br2C_xZW1rg1FuzXA7vQ_Data.json')
+      .then(response => response.json())
+      .then(jsonData => {
+        if (Array.isArray(jsonData)) {
+          const combinedRows = jsonData.reduce((acc, item) => {
+            if (item && Array.isArray(item.rows)) return acc.concat(item.rows);
+            return acc;
+          }, []);
+
+          const validRows = combinedRows.filter(row => row && row[0] !== "" && !String(row[1]).includes("1899"));
+
+          // Nhóm dữ liệu theo tên "Ghi chú" (row[3]) để tính tỷ lệ chi tiêu
+          const categoryMap = {};
+          let totalAll = 0;
+
+          validRows.forEach(row => {
+            const amount = row[2] ? Number(row[2]) : 0;
+            // Chuẩn hóa tên ghi chú một chút để gom nhóm (ví dụ: Xôi gà chú Năm, Xôi gà Chú Mười -> nhóm Xôi gà)
+            let note = row[3] ? String(row[3]).trim() : 'Khác';
+            let category = 'Khác';
+            
+            if (note.toLowerCase().includes('xôi')) category = 'Xôi các loại 🌾';
+            else if (note.toLowerCase().includes('sủi cảo') || note.toLowerCase().includes('hủ tiếu') || note.toLowerCase().includes('phở') || note.toLowerCase().includes('mì')) category = 'Mì, Hủ tiếu, Phở, Cảo 🍜';
+            else if (note.toLowerCase().includes('xe ôm') || note.toLowerCase().includes('xe bốn chỗ') || note.toLowerCase().includes('đặt xe')) category = 'Di chuyển (Xe ôm/Grab) 🏍️';
+            else if (note.toLowerCase().includes('bánh mì')) category = 'Bánh mì 🥖';
+            else if (note.toLowerCase().includes('bánh cuốn')) category = 'Bánh cuốn 🥞';
+            else if (note.toLowerCase().includes('sữa chua') || note.toLowerCase().includes('flan') || note.toLowerCase().includes('kem')) category = 'Ăn vặt / Tráng miệng 🍮';
+            else category = 'Món ăn khác 🍱';
+
+            categoryMap[category] = (categoryMap[category] || 0) + amount;
+            totalAll += amount;
+          });
+
+          // Chuyển thành mảng và tính phần trăm
+          let accumulatedAngle = 0;
+          const formattedData = Object.keys(categoryMap).map((cat, idx) => {
+            const value = categoryMap[cat];
+            const percentage = (value / totalAll) * 100;
+            return {
+              category: cat,
+              value,
+              percentage: percentage.toFixed(1)
+            };
+          }).sort((a, b) => b.value - a.value); // Thằng chi nhiều nhất nằm trước
+
+          setPieData(formattedData);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Lỗi pháp trận húp API Pie Chart:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '30px', color: 'var(--ifm-color-primary)', fontWeight: 'bold' }}>
+        🔄 Lão tổ đang niệm chú vẽ vòng tròn SVG, đợi tí nhé b hiền...
+      </div>
+    );
+  }
+
+  // Bảng màu rực rỡ sắc nét cho từng lát cắt của chiếc bánh pizza tài chính
+  const colors = ['#2f6fe2', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22'];
+
+  // --- HÀM MA THUẬT TOÁN HỌC LƯỢNG GIÁC ĐỂ VẼ SVG PATH ---
+  // Chuyển đổi tọa độ góc cực (Polar) sang tọa độ vuông góc đề-các (Cartesian)
+  const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+    return {
+      x: centerX + radius * Math.cos(angleInRadians),
+      y: centerY + radius * Math.sin(angleInRadians)
+    };
+  };
+
+  // Tạo chuỗi lệnh `d` cho thẻ <path /> để vẽ cung tròn từ góc này sang góc kia
+  const describeArc = (x, y, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(x, y, radius, endAngle);
+    const end = polarToCartesian(x, y, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M", x, y,
+      "L", start.x, start.y,
+      "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+      "Z"
+    ].join(" ");
+  };
+
+  // Tính tổng tất cả số tiền để ăn khớp góc 360 độ
+  const totalSum = pieData.reduce((sum, item) => sum + item.value, 0);
+  let startAngle = 0;
+
+  return (
+    <div style={{ margin: '20px 0', border: '1px solid var(--ifm-contents-border-color)', borderRadius: '12px', padding: '24px', backgroundColor: 'var(--ifm-background-surface-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+      
+      <h3 style={{ marginBottom: '25px', textAlign: 'center', color: '#2f6fe2' }}>
+        🍕 Tỷ Lệ Cơ Cấu Các Hạng Mục Chi Tiêu
+      </h3>
+
+      <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
+        
+        {/* Vùng Vẽ Đồ Họa Tròn SVG */}
+        <div style={{ width: '250px', height: '250px' }}>
+          <svg viewBox="0 0 200 200" width="100%" height="100%" style={{ overflow: 'visible' }}>
+            {pieData.map((item, index) => {
+              const angleSlice = (item.value / totalSum) * 360;
+              const endAngle = startAngle + angleSlice;
+              const pathData = describeArc(100, 100, 90, startAngle, endAngle);
+              
+              // Tính góc ở giữa lát bánh để ghi số % lên mặt bánh nếu muốn (ở đây lão tổ làm hiệu ứng hover/chú thích cho sạch)
+              const currentStart = startAngle;
+              startAngle = endAngle; // Cập nhật góc bắt đầu cho lát kế tiếp
+
+              return (
+                <path
+                  key={item.category}
+                  d={pathData}
+                  fill={colors[index % colors.length]}
+                  stroke="var(--ifm-background-surface-color)"
+                  strokeWidth="1.5"
+                  style={{ 
+                    transition: 'transform 0.2s ease, opacity 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseOver={(e) => { e.target.style.opacity = '0.85'; e.target.style.transform = 'scale(1.02)'; }}
+                  onMouseOut={(e) => { e.target.style.opacity = '1'; e.target.style.transform = 'scale(1)'; }}
+                />
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* Bảng Chú Thích Danh Mục Bên Cạnh */}
+        <div style={{ flex: '1', minWidth: '250px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, fontSize: '13px' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--ifm-color-emphasis-300)' }}>
+                <th style={{ padding: '6px', textAlign: 'left' }}>Hạng mục</th>
+                <th style={{ padding: '6px', textAlign: 'right' }}>Tổng chi</th>
+                <th style={{ padding: '6px', textAlign: 'right' }}>Tỷ lệ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pieData.map((item, index) => (
+                <tr key={item.category} style={{ borderBottom: '1px solid var(--ifm-color-emphasis-100)' }}>
+                  <td style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}>
+                    <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: colors[index % colors.length] }}></span>
+                    {item.category}
+                  </td>
+                  <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                    {item.value.toLocaleString('vi-VN')} ₫
+                  </td>
+                  <td style={{ padding: '8px 6px', textAlign: 'right' }}>
+                    <span style={{ backgroundColor: 'var(--ifm-color-emphasis-200)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                      {item.percentage}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <div style={{ marginTop: '25px', fontSize: '12px', color: 'var(--ifm-color-emphasis-600)', textAlign: 'center', fontStyle: 'italic' }}>
+        💡 Nhìn đồ thị trực quan là biết b hiền dành cả thanh xuân để ăn xôi hay đi xe ôm liền luôn! 🚀
+      </div>
+    </div>
+  );
+};
+
+<BrowserOnly>
+  {() => <BudgetPieChart />}
+</BrowserOnly>

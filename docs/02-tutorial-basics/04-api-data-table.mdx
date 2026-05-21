@@ -1,0 +1,196 @@
+---
+title: 📊 Quản Lý Dòng Tiền - Live API DataTable
+sidebar_label: Live API DataTable
+---
+
+import React, { useState, useEffect } from 'react';
+
+# 💸 Bảng Thống Kê Dòng Tiền Cá Nhân (Dữ Liệu Live API)
+
+Dữ liệu sổ thu chi được đồng bộ real-time trực tiếp từ định dạng cấu trúc mảng hàng dọc của b hiền. Hệ thống hỗ trợ tìm kiếm thần tốc và phân trang mượt mà.
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+export const BudgetDataTable = () => {
+  const [allRows, setAllRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; 
+
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/ahihihihihihi/public/refs/heads/react-social-media-full-stack/15Q1yU59sfWI9oTeJHFkjkj6Br2C_xZW1rg1FuzXA7vQ_Data.json')
+      .then(response => response.json())
+      .then(jsonData => {
+        if (Array.isArray(jsonData)) {
+          // Gom tất cả các mảng "rows" từ từng Object trong mảng lớn lại thành 1 mảng duy nhất
+          const combinedRows = jsonData.reduce((acc, item) => {
+            if (item && Array.isArray(item.rows)) {
+              return acc.concat(item.rows);
+            }
+            return acc;
+          }, []);
+
+          // Lọc bỏ các dòng rác (dòng trống không có ID hoặc ngày lỗi 1899)
+          const validRows = combinedRows.filter(row => row && row[0] !== "" && !String(row[1]).includes("1899"));
+          
+          setAllRows(validRows);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Lỗi kết nối API dòng tiền:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '30px', color: 'var(--ifm-color-primary)', fontWeight: 'bold' }}>
+        🔄 Đang nạp dữ liệu từ máy chủ, b hiền đợi tí nhé...
+      </div>
+    );
+  }
+
+  // Bộ lọc tìm kiếm: row[3] là Ghi chú, row[0] là ID, row[1] là Ngày Giờ
+  const filteredRows = allRows.filter(row => {
+    const searchStr = searchTerm.toLowerCase();
+    const idStr = row[0] ? String(row[0]).toLowerCase() : '';
+    const dateStr = row[1] ? String(row[1]).toLowerCase() : '';
+    const noteStr = row[3] ? String(row[3]).toLowerCase() : '';
+    
+    return noteStr.includes(searchStr) || idStr.includes(searchStr) || dateStr.includes(searchStr);
+  });
+
+  // Tính toán phân trang mượt mà (10 dòng/trang)
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
+  // Hàm chuyển đổi "2026-03-01 00:00:00" thành "03/2026"
+  const formatMonthDisplay = (dateValue) => {
+    if (!dateValue) return '';
+    const str = String(dateValue);
+    if (str.includes('-')) {
+      const onlyDate = str.split(' ')[0]; 
+      const parts = onlyDate.split('-');   
+      if (parts.length >= 2) {
+        return `${parts[1]}/${parts[0]}`;  
+      }
+    }
+    return str;
+  };
+
+  return (
+    <div style={{ margin: '20px 0', border: '1px solid var(--ifm-contents-border-color)', borderRadius: '12px', padding: '20px', backgroundColor: 'var(--ifm-background-surface-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+      
+      {/* Thanh tìm kiếm tinh giản */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>Tìm kiếm:</span>
+          <input
+            type="text"
+            placeholder="Nhập ghi chú cần tìm..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--ifm-color-emphasis-400)', backgroundColor: 'var(--ifm-background-color)', color: 'var(--ifm-font-color-base)', width: '220px', fontSize: '14px', outline: 'none' }}
+          />
+        </div>
+      </div>
+
+      {/* Bảng hiển thị thông tin dòng tiền */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, fontSize: '14px' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#2f6fe2', color: '#ffffff', borderBottom: '2px solid #1a4fa8' }}>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#ffffff' }}>ID</th>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#ffffff' }}>Ngày Giờ</th>
+              <th style={{ padding: '12px 15px', textAlign: 'right', color: '#ffffff' }}>Số tiền</th>
+              <th style={{ padding: '12px 15px', textAlign: 'left', color: '#ffffff' }}>Ghi chú</th>
+              <th style={{ padding: '12px 15px', textAlign: 'center', color: '#ffffff' }}>Tháng</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentItems.length > 0 ? (
+              currentItems.map((row, index) => (
+                <tr key={row[0] || index} style={{ borderBottom: '1px solid var(--ifm-color-emphasis-200)', backgroundColor: index % 2 === 0 ? 'transparent' : 'var(--ifm-color-emphasis-100)' }}>
+                  {/* row[0]: ID */}
+                  <td style={{ padding: '12px 15px' }}><code>{row[0] ? String(row[0]) : ''}</code></td>
+                  {/* row[1]: Ngày Giờ */}
+                  <td style={{ padding: '12px 15px', color: 'var(--ifm-color-emphasis-700)' }}>{row[1] || ''}</td>
+                  {/* row[2]: Số tiền */}
+                  <td style={{ padding: '12px 15px', textAlign: 'right', fontWeight: 'bold', color: '#2f6fe2' }}>
+                    {row[2] !== undefined && row[2] !== null ? Number(row[2]).toLocaleString('vi-VN') : '0'} ₫
+                  </td>
+                  {/* row[3]: Ghi chú */}
+                  <td style={{ padding: '12px 15px', fontWeight: '500' }}>{row[3] || ''}</td>
+                  {/* row[4]: Tháng */}
+                  <td style={{ padding: '12px 15px', textAlign: 'center' }}>
+                    <span style={{ backgroundColor: 'var(--ifm-color-primary-lightest)', color: 'var(--ifm-color-primary-darkest)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                      {formatMonthDisplay(row[4])}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: '#999' }}>❌ Không tìm thấy lịch sử thu chi trùng khớp rồi b hiền ơi!</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Điều hướng phân trang */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap', gap: '15px', fontSize: '14px' }}>
+        <div>
+          Hiển thị <b>{filteredRows.length > 0 ? indexOfFirstItem + 1 : 0}</b> tới <b>{Math.min(indexOfLastItem, filteredRows.length)}</b> của <b>{filteredRows.length}</b> dữ liệu
+        </div>
+
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="button button--secondary button--sm"
+              style={{ padding: '4px 10px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+            >
+              Trước
+            </button>
+            
+            {pageNumbers.map(number => (
+              <button
+                key={number}
+                onClick={() => setCurrentPage(number)}
+                className={`button button--sm ${currentPage === number ? 'button--primary' : 'button--secondary'}`}
+                style={{ padding: '4px 12px', fontWeight: currentPage === number ? 'bold' : 'normal' }}
+              >
+                {number}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="button button--secondary button--sm"
+              style={{ padding: '4px 10px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+            >
+              Sau
+            </button>
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+};
+
+<BrowserOnly>
+  {() => <BudgetDataTable />}
+</BrowserOnly>

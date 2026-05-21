@@ -1,0 +1,112 @@
+---
+title: 📊 Biểu Đồ Thư Viện - Recharts Component
+sidebar_label: Recharts Component
+sidebar_position: 7
+---
+
+import React, { useState, useEffect } from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+# 🚀 Biểu Đồ Siêu Mượt Với Thư Viện Ngoài (Recharts)
+
+Trang này sử dụng sức mạnh của thư viện **Recharts** khét tiếng trong hệ sinh thái React. Rê chuột vào các cột hoặc đường để trải nghiệm hệ thống Tooltip thông minh tự động tracked theo con trỏ!
+
+export const RechartsDynamicComponent = () => {
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/ahihihihihihi/public/refs/heads/react-social-media-full-stack/15Q1yU59sfWI9oTeJHFkjkj6Br2C_xZW1rg1FuzXA7vQ_Data.json')
+      .then(response => response.json())
+      .then(jsonData => {
+        if (Array.isArray(jsonData)) {
+          const combinedRows = jsonData.reduce((acc, item) => {
+            if (item && Array.isArray(item.rows)) return acc.concat(item.rows);
+            return acc;
+          }, []);
+
+          const validRows = combinedRows.filter(row => row && row[0] !== "" && !String(row[1]).includes("1899"));
+
+          // Nhóm dữ liệu theo tháng
+          const monthlyMap = {};
+          validRows.forEach(row => {
+            const amount = row[2] ? Number(row[2]) : 0;
+            let monthLabel = 'Không rõ';
+            if (row[4] && String(row[4]).includes('-')) {
+              const onlyDate = String(row[4]).split(' ')[0];
+              const parts = onlyDate.split('-');
+              if (parts.length >= 2) monthLabel = `${parts[1]}/${parts[0]}`;
+            }
+            monthlyMap[monthLabel] = (monthlyMap[monthLabel] || 0) + amount;
+          });
+
+          const formattedData = Object.keys(monthlyMap).map(month => ({
+            name: `Tháng ${month}`,
+            'Tổng Chi': monthlyMap[month]
+          })).sort((a, b) => a.name.localeCompare(b.name));
+
+          setChartData(formattedData);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Lỗi nạp Recharts:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: '20px', fontWeight: 'bold' }}>🔄 Thư viện đang dựng biểu đồ siêu cấp...</div>;
+  }
+
+  // Import động các component của Recharts bên trong hàm để an toàn tuyệt đối khi build SSR
+  const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = require('recharts');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', margin: '20px 0' }}>
+      
+      {/* 1. Biểu đồ cột từ thư viện */}
+      <div style={{ border: '1px solid var(--ifm-contents-border-color)', borderRadius: '12px', padding: '20px', backgroundColor: 'var(--ifm-background-surface-color)' }}>
+        <h3 style={{ textAlign: 'center', color: '#2f6fe2', marginBottom: '15px' }}>📊 Biểu Đồ Cột Recharts (Tự Động Tooltip)</h3>
+        <div style={{ width: '100%', height: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--ifm-color-emphasis-300)" />
+              <XAxis dataKey="name" stroke="var(--ifm-font-color-base)" />
+              <YAxis stroke="var(--ifm-font-color-base)" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'var(--ifm-background-surface-color)', borderRadius: '8px', border: '1px solid var(--ifm-color-primary)' }}
+                itemStyle={{ color: '#2f6fe2', fontWeight: 'bold' }}
+              />
+              <Legend />
+              <Bar dataKey="Tổng Chi" fill="#2f6fe2" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* 2. Biểu đồ đường xu hướng từ thư viện */}
+      <div style={{ border: '1px solid var(--ifm-contents-border-color)', borderRadius: '12px', padding: '20px', backgroundColor: 'var(--ifm-background-surface-color)' }}>
+        <h3 style={{ textAlign: 'center', color: '#2ecc71', marginBottom: '15px' }}>📈 Biểu Đồ Đường Xu Hướng Smooth</h3>
+        <div style={{ width: '100%', height: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--ifm-color-emphasis-300)" />
+              <XAxis dataKey="name" stroke="var(--ifm-font-color-base)" />
+              <YAxis stroke="var(--ifm-font-color-base)" />
+              <Tooltip contentStyle={{ backgroundColor: 'var(--ifm-background-surface-color)', borderRadius: '8px' }} />
+              <Legend />
+              <Line type="monotone" dataKey="Tổng Chi" stroke="#2ecc71" strokeWidth={3} activeDot={{ r: 8 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+{/* Bọc toàn bộ trong BrowserOnly để lúc build static không bị lỗi vỡ thớt */}
+<BrowserOnly>
+  {() => <RechartsDynamicComponent />}
+</BrowserOnly>

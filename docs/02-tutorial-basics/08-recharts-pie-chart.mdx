@@ -1,0 +1,114 @@
+---
+title: 🍕 Biểu Đồ Tròn Thư Viện - Recharts Pie
+sidebar_label: Recharts Pie Chart
+sidebar_position: 8
+---
+
+import React, { useState, useEffect } from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+# 🍕 Cơ Cấu Chi Tiêu Với Recharts Pie Chart
+
+Biểu đồ này sử dụng thư viện ngoài để tự động tính toán tỷ lệ phần trăm và vẽ các lát cắt. Hiệu ứng rê chuột (Hover) sẽ tự động làm nổi bật hạng mục đang xem.
+
+export const RechartsPieComponent = () => {
+  const [pieData, setPieData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/ahihihihihihi/public/refs/heads/react-social-media-full-stack/15Q1yU59sfWI9oTeJHFkjkj6Br2C_xZW1rg1FuzXA7vQ_Data.json')
+      .then(response => response.json())
+      .then(jsonData => {
+        if (Array.isArray(jsonData)) {
+          const combinedRows = jsonData.reduce((acc, item) => {
+            if (item && Array.isArray(item.rows)) return acc.concat(item.rows);
+            return acc;
+          }, []);
+
+          const validRows = combinedRows.filter(row => row && row[0] !== "" && !String(row[1]).includes("1899"));
+
+          // Nhóm dữ liệu theo hạng mục dựa trên Ghi chú (row[3])
+          const categoryMap = {};
+          validRows.forEach(row => {
+            const amount = row[2] ? Number(row[2]) : 0;
+            let note = row[3] ? String(row[3]).toLowerCase() : '';
+            let category = 'Món ăn khác 🍱';
+            
+            if (note.includes('xôi')) category = 'Xôi các loại 🌾';
+            else if (note.includes('sủi cảo') || note.includes('hủ tiếu') || note.includes('phở') || note.includes('mì')) category = 'Mì, Hủ tiếu, Phở 🍜';
+            else if (note.includes('xe ôm') || note.includes('xe bốn chỗ') || note.includes('đặt xe')) category = 'Di chuyển 🏍️';
+            else if (note.includes('bánh mì')) category = 'Bánh mì 🥖';
+            else if (note.includes('bánh cuốn')) category = 'Bánh cuốn 🥞';
+            else if (note.includes('sữa chua') || note.includes('flan') || note.includes('kem')) category = 'Tráng miệng 🍮';
+
+            categoryMap[category] = (categoryMap[category] || 0) + amount;
+          });
+
+          const formattedData = Object.keys(categoryMap).map(cat => ({
+            name: cat,
+            value: categoryMap[cat]
+          })).sort((a, b) => b.value - a.value);
+
+          setPieData(formattedData);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Lỗi nạp Pie Recharts:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: '20px' }}>🔄 Đang vẽ bánh Pizza tài chính...</div>;
+  }
+
+  // Import động Recharts
+  const { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } = require('recharts');
+
+  // Bảng màu sắc hiện đại
+  const COLORS = ['#2f6fe2', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22'];
+
+  return (
+    <div style={{ border: '1px solid var(--ifm-contents-border-color)', borderRadius: '12px', padding: '30px', backgroundColor: 'var(--ifm-background-surface-color)', margin: '20px 0' }}>
+      <h3 style={{ textAlign: 'center', color: '#2f6fe2', marginBottom: '20px' }}>🍕 Phân Phối Ngân Sách Ăn Uống & Đi Lại</h3>
+      
+      <div style={{ width: '100%', height: 400 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              // Nhãn hiển thị phần trăm trực tiếp trên lát bánh
+              label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+              outerRadius={120}
+              fill="#8884d8"
+              dataKey="value"
+              // Hiệu ứng phóng to khi hover
+              activeShape={{ stroke: '#fff', strokeWidth: 2 }}
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value) => `${Number(value).toLocaleString('vi-VN')} ₫`}
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+            />
+            <Legend verticalAlign="bottom" height={36}/>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: 'var(--ifm-color-emphasis-700)' }}>
+        💡 <b>Mẹo:</b> Rê chuột vào từng phần của biểu đồ để xem chi tiết số tiền b đã chi tiêu!
+      </div>
+    </div>
+  );
+};
+
+<BrowserOnly>
+  {() => <RechartsPieComponent />}
+</BrowserOnly>

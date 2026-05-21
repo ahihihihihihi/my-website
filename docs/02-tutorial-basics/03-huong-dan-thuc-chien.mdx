@@ -1,0 +1,107 @@
+---
+title: 🛠️ Quy Trình Tinh Chế Tài Liệu Với AI & MarkText
+sidebar_label: Hướng Dẫn Tinh Chế
+sidebar_position: 3
+---
+
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
+
+# 🎯 Tổng Quan Quy Trình Biến Văn Bản Thô Thành Tinh Túy
+
+Chào mừng bạn hiền đến với hệ thống quản lý tài liệu tự động. Khi b có một đống dữ liệu lộn xộn, mục tiêu của anh em mình là biến nó thành một trang tài liệu trực quan, dễ đọc, có cấu trúc rõ ràng và hỗ trợ đầy đủ đa phương tiện (Ảnh, Video).
+
+---
+
+## 🏗️ 1. Cấu Trúc Phân Cấp H2 (Tiêu đề phụ lớn)
+
+Văn bản thô sau khi được AI xử lý sẽ tự động phân tách thành các mục lớn bằng dấu `##`. Điều này giúp thanh menu bên phải (Table of Contents) của Docusaurus tự động bắt được và tạo mục lục điều hướng cho người dùng.
+
+### 📝 1.1. Tiêu đề cấp nhỏ H3 (Chi tiết hơn)
+Trong mỗi mục lớn, nếu có các bước nhỏ hơn, chúng ta sẽ dùng `###` để phân cấp. Việc này giúp bài viết sâu sắc và không bị rối mắt.
+
+* **Bước 1:** Đưa văn bản thô cho AI "nhai".
+* **Bước 2:** AI nhả ra định dạng MDX xịn sò.
+* **Bước 3:** Dùng MarkText để preview và chỉnh sửa nhanh.
+
+---
+
+## 🖼️ 2. Tinh Túy Chèn Ảnh Tự Động Với Hiệu Ứng Zoom
+
+Không còn cảnh ảnh nằm đơ như cây cơ nữa! Bằng cách kết hợp linh hoạt giữa cú pháp Markdown và thẻ bọc React, mọi tấm ảnh chèn vào đây đều có thể click để phóng to mượt mà.
+
+<div style={{ textAlign: 'center', margin: '25px 0' }}>
+  <Zoom>
+    <img 
+      src="/img/docusaurus.png" 
+      width="350" 
+      alt="Hệ thống tự động hóa tài liệu" 
+      style={{ cursor: 'zoom-in', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+    />
+  </Zoom>
+  <p style={{ color: '#888', fontSize: '14px', marginTop: '10px' }}>
+    <i>Hình 1: Mô hình tự động hóa tài liệu (Click trực tiếp vào ảnh để phóng to)</i>
+  </p>
+</div>
+
+> 💡 **Mẹo Cơ Trưởng:** Khi b dùng MarkText gõ lệnh paste ảnh, nó sẽ tự động sinh ra file trong thư mục `static/img`. B chỉ cần bọc cái thẻ ảnh đó vào trong cụm `<Zoom> ... </Zoom>` là xong bài!
+
+---
+
+## 🎥 3. Tích Hợp Video Trực Quan (Youtube / Nhúng link ngoài)
+
+Để bài viết sinh động, việc chèn video hướng dẫn là không thể thiếu. Trong file `.mdx`, b có thể nhúng một cái thẻ `<iframe>` chuẩn React cực kỳ dễ dàng để người đọc bấm xem trực tiếp trên trang web:
+
+<div style={{ textAlign: 'center', margin: '25px 0' }}>
+  <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', maxWidth: '100%', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+    <iframe 
+      src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+      frameBorder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowFullScreen
+      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    ></iframe>
+  </div>
+  <p style={{ color: '#888', fontSize: '14px', marginTop: '10px' }}>
+    <i>Video 1: Hướng dẫn thực chiến thao tác trên môi trường Production</i>
+  </p>
+</div>
+
+---
+
+## 🚀 4. Tổng Kết
+
+Với bộ khung chuẩn chỉnh này:
+1. Giao diện hiển thị chuẩn SEO, phân cấp rõ ràng.
+2. Ảnh click phóng to mượt như nhung.
+3. Video xem trực tiếp mượt mà không bị vỡ khung hình (Responsive).
+
+Bây giờ b chỉ cần gõ lệnh `git push` để đẩy bản tinh túy này lên mây và tận hưởng thôi b hiền ơi!
+
+| Tính năng | Gõ chay (VS Code) | Dùng Hậu Chiêu (MarkText + AI) |
+| :--- | :---: | :---: |
+| **Tốc độ viết bài** | Rùa bò 🐢 | Tên lửa 🚀 |
+| **Xử lý ảnh/video** | Gõ code sấp mặt | Paste phát ăn ngay |
+| **Độ nhàn hạ** | Đau lưng mỏi gối | Ngồi nghía uống trà |
+
+:::note[Ghi chú]
+
+Đây là một hộp ghi chú màu xanh dương dịu mát, dùng để bổ sung thông tin nền.
+
+:::
+
+:::tip[Mẹo cơ trưởng]
+
+Dùng tổ hợp phím `Cmd + V` trong MarkText để tự động copy ảnh vào thư mục dự án!
+
+:::
+
+:::warning[Cảnh báo nguy hiểm]
+
+Đừng bao giờ quên gỡ plugin cũ trước khi cài thư viện Zoom React kẻo sập web!
+
+:::
+
+
+
+
